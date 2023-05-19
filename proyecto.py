@@ -1,11 +1,16 @@
 import gensim as gen
-import os
 from spacy.lang.es import Spanish
 from spacy.tokenizer import Tokenizer
 
-#import gensim.models.word2vec as w2v
-#import gensim.models.fasttext as fastt
-#import gensim.models.poincare as poinc
+import gensim.models.word2vec as word2vec
+import gensim.models.poincare as poinc
+import gensim.models as models
+
+import zipimport
+lib_zip = zipimport.zipimporter('BERT-master.zip')
+BERT = lib_zip.load_module('lib.BERT')
+
+
 #import gensim.scripts.glove2word2vec as glove #esto transforma de GloVe a word2vec
 
 class WordEmbedding(object):
@@ -20,16 +25,32 @@ class WordEmbedding(object):
                     doc_list.append(text)
         return doc_list
       
-    def TokenizeText(Text):#Text es el texto entero de un documento.
+    def tokenize_text_list(text_list):
         nlp = Spanish()
         tokenizer = nlp.tokenizer
-        tokens = tokenizer(Text) 
-        return tokens
+        token_list = []
+        for text in text_list:
+            tokens = tokenizer(text)
+            token_list.append([token.text for token in tokens]) #token_list.append(tokens)
+        return token_list
+    
+    def Word2Vec(token_list):
+        model = models.Word2Vec(token_list, size=100, window=5, min_count=1, workers=4)
+        return model
+    
+    def FastText(token_list):
+        model = models.FastText(token_list, size=100, window=5, min_count=1, workers=4)
+        return model
+    
+    def Poincare(token_list):
+        model = poinc.PoincareModel(token_list, size=100, window=5, min_count=1, workers=4)
+        return model
+    
+    def GloVe(token_list):
+        model = gen.utils.
+
+    def BERT(token_list):
+        
     
 
-
-
-#Method that processes a text and returns a list of the vectors of each word using word2vec
-def word2vec(text):
-    model = gen.models.Word2Vec(text, size, window, min_count, workers, iter)
     
