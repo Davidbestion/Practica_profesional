@@ -8,13 +8,8 @@ import BERTmaster.modeling as Bert
 
 from spacy.lang.es import Spanish
 
-import gensim.models.poincare as poinc
 import gensim.models as models
-
-import gensim_old.models as old
-
-
-    
+   
 def ReadTexts(path : str):
     """Extracts the text of the .txt files in the given path.
     
@@ -135,7 +130,7 @@ def BERT(token_list):#ATENCION NO SE SI ESTA BIEN.
 
 def GloVe(token_list :list, size :int, window :int, min_count :int, path :str, mode :int):
     CORPUS=token_list
-    VOCAB_FILE=GloVe-master/GloVe-master/vocab.txt
+    VOCAB_FILE=vocab.txt
     COOCCURRENCE_FILE=cooccurrence.bin
     COOCCURRENCE_SHUF_FILE=cooccurrence.shuf.bin
     BUILDDIR=build
