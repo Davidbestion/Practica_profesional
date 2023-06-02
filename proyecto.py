@@ -86,12 +86,7 @@ def Word2Vec(token_list :list, size :int, window :int, min_count :int, path :str
     model = models.Word2Vec(sentences=token_list, vector_size=size, window=window, min_count=min_count)
     vectors = model.wv.vectors
 
-    with open("Word2Vec_vectors.txt", "w") as f:
-        for vector in vectors:
-            for number in vector:
-                f.write(str(number) + " ")
-            f.write("\n")
-
+    Save_Vectors(vectors, path, "Word2Vec_vectors.txt")
     return vectors
 
     # if mode == 1: #Save the vectors in a file located at path
@@ -122,11 +117,12 @@ def FastText(token_list :list, size :int, window :int, min_count :int, path :str
     model = models.FastText(sentences=token_list, vector_size=size, window=window, min_count=min_count)
     vectors = model.wv.vectors
 
-    with open("FastText_vectors.txt", "w") as f:
-        for vector in vectors:
-            for number in vector:
-                f.write(str(number) + " ")
-            f.write("\n")
+    Save_Vectors(vectors, path, "FastText_vectors.txt")
+    # with open("FastText_vectors.txt", "w") as f:
+    #     for vector in vectors:
+    #         for number in vector:
+    #             f.write(str(number) + " ")
+    #         f.write("\n")
 
     return vectors
 
@@ -151,11 +147,11 @@ def GloVe(texts: list, size :int, window :int, min_count :int, path :str):
             f.write("\n")
         
     corpus="texts.txt"
-    vocab_file="vocab.txt"
-    coocurrence_file="cooccurrence.bin"
-    coocurrence_shuf_file="cooccurrence.shuf.bin"
+    vocab_file="GloVeMaster/GloVeMaster/vocab.txt"
+    coocurrence_file="GloVeMaster/GloVeMaster/cooccurrence.bin"
+    coocurrence_shuf_file="GloVeMaster/GloVeMaster/cooccurrence.shuf.bin"
     builddir="GloVeMaster/GloVeMaster/build"
-    save_file="GloVe_vectors"
+    save_file= path + "/GloVe_vectors"
     verbose=2
     memory=4.0
     vocab_min_count= str(min_count)
@@ -181,11 +177,31 @@ def GloVe(texts: list, size :int, window :int, min_count :int, path :str):
     output = subprocess.check_output(builddir +"/glove -save-file "+save_file+" -threads "+str(num_threads)+" -input-file " + coocurrence_shuf_file + " -x-max "+str(x_max)+"-iter "+str(max_iter)+" -vector-size "+str(vector_size)+" -binary "+str(binary)+" -vocab-file "+vocab_file+" -verbose "+str(verbose), shell=True)
     print(output.decode())
 
+    #Esto es pa retornar los vectores en el mismo formato que los metodos anteriores
+    with open(save_file + ".txt", "r") as f:
+        lines = f.readlines()
+
+    vectors = []
+    #Los otros metodos devuelven un array con los vectores, 
+    # que tambien son arrays con las respectivas componentes.
+    for l in lines:
+        numbers = [str(x) for x in l.strip().split(' ')]
+        #ACLARACION: quito el primer elemento para que lo devuelto sean solo los vectores.
+        #Este metodo de GloVe devuelve delante de las componentes, la palabra correspondiente a cada vector.
+        numbers = [float(x) for x in numbers[1:]]
+        vectors.append(numbers)
+    
+    vectors = np.array(vectors)
+    return vectors
 
 
-def Save(vectors :np.ndarray, path):
-    with open(path, 'w') as f:
-        for v in vectors:
-            vector_line = ' '.join(str(x) for x in v)
-            f.write(vector_line + '\n')
+
+def Save_Vectors(vectors: list[list], path, file_name):
+    
+    with open(os.path.join(path,file_name), "w") as f:
+        for vector in vectors:
+            for number in vector:
+                f.write(str(number) + " ")
+            f.write("\n")
+
 
