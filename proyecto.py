@@ -2,9 +2,11 @@ import os
 import numpy as np
 import subprocess
 
+#import BERTmaster.run_pretraining
+
 #from transformers import BertModel, BertTokenizer, BertForMaskedLM
 #import transformers
-import BERTmaster.modeling as Bert
+#import BERTmaster.extract_features as Bert
 
 from spacy.lang.es import Spanish
 
@@ -22,7 +24,7 @@ def ReadTexts(path : str):
     doc_list = []
     for filename in os.listdir(path):
         if filename.endswith(".txt"):
-            with open(os.path.join(path, filename), 'r') as f:
+            with open(os.path.join(path, filename), 'r', encoding='utf-8', errors='ignore') as f:
                 text = f.read().replace('\n', ' ')
                 doc_list.append(text)
     return doc_list
@@ -36,7 +38,7 @@ def tokenize_text_list(text_list):
         token_list.append([token.text for token in tokens]) #token_list.append(tokens)
     return token_list
 
-def Execute_Models(models :list[str], load_path :str, size :int, window :int, min_count :int, save_path :str, mode :int=0):
+def Execute_Models(models :list[str], load_path :str, size :int, window :int, min_count :int, save_path :str):
     """Trains all the modles requested in "models".
 
     Parameters:
@@ -51,19 +53,21 @@ def Execute_Models(models :list[str], load_path :str, size :int, window :int, mi
     Return:
     results: list containing lists with the vectors retorned by the different models.
     """
-    if mode < -1 or mode > 1: raise ValueError("'mode' must be in {-1, 0, 1}")
-
+    
     results = []
-    tokens = tokenize_text_list(ReadTexts(load_path))
+    texts = ReadTexts(load_path)
+    tokens = tokenize_text_list(texts)
     
     for func_name in models: 
         func = globals().get(func_name) #get the functions which names are in the "models" list
         if func and callable(func):
-            results.append(func(tokens, size, window, min_count, save_path, mode)) #store the results of the functions.
+            # if func_name== "GloVe":
+            #     results.append(func(texts,))
+            results.append(func(tokens, size, window, min_count, save_path)) #store the results of the functions.
         else: raise ValueError("Error getting function in 'Execute_Models' function. Please check the list of models.")
     return results
     
-def Word2Vec(token_list :list, size :int, window :int, min_count :int, path :str, mode :int):
+def Word2Vec(token_list :list, size :int, window :int, min_count :int, path :str):
     """Train a Word2Vec model.
 
     Parameters:
@@ -82,6 +86,12 @@ def Word2Vec(token_list :list, size :int, window :int, min_count :int, path :str
     model = models.Word2Vec(sentences=token_list, vector_size=size, window=window, min_count=min_count)
     vectors = model.wv.vectors
 
+    with open("Word2Vec_vectors.txt", "w") as f:
+        for vector in vectors:
+            for number in vector:
+                f.write(str(number) + " ")
+            f.write("\n")
+
     return vectors
 
     # if mode == 1: #Save the vectors in a file located at path
@@ -93,8 +103,8 @@ def Word2Vec(token_list :list, size :int, window :int, min_count :int, path :str
     #     vectors.save(path)
     #     return vectors
     
-def FastText(token_list :list, size :int, window :int, min_count :int, path :str, mode :int):
-    """Train a Word2Vec model.
+def FastText(token_list :list, size :int, window :int, min_count :int, path :str):
+    """Train a FastText model.
 
     Parameters:
     token_list: list of lists of the tokenized texts. Each element of the bigger list is a list, and every inner list is a list of tokens, a tokenized text.
@@ -112,6 +122,12 @@ def FastText(token_list :list, size :int, window :int, min_count :int, path :str
     model = models.FastText(sentences=token_list, vector_size=size, window=window, min_count=min_count)
     vectors = model.wv.vectors
 
+    with open("FastText_vectors.txt", "w") as f:
+        for vector in vectors:
+            for number in vector:
+                f.write(str(number) + " ")
+            f.write("\n")
+
     return vectors
 
     # if mode == 1: #Save the vectors in a file located at path
@@ -123,33 +139,46 @@ def FastText(token_list :list, size :int, window :int, min_count :int, path :str
     #     vectors.save(path)
     #     return vectors
 
-def BERT(token_list):#ATENCION NO SE SI ESTA BIEN.
-    modelConfig = Bert.BertConfig()
-    model = Bert.BertModel()
+#def BERT(token_list):#ATENCION NO SE SI ESTA BIEN.
+    #model = BERTmaster
     #model = transformers.
 
-def GloVe(token_list :list, size :int, window :int, min_count :int, path :str, mode :int):
-    CORPUS=token_list
-    VOCAB_FILE=vocab.txt
-    COOCCURRENCE_FILE=cooccurrence.bin
-    COOCCURRENCE_SHUF_FILE=cooccurrence.shuf.bin
-    BUILDDIR=build
-    SAVE_FILE=vectors.txt
-    VERBOSE=2
-    MEMORY=4.0
-    VOCAB_MIN_COUNT=min_count
-    VECTOR_SIZE=size
-    MAX_ITER=15
-    WINDOW_SIZE=window
-    BINARY=2
-    NUM_THREADS=8
-    X_MAX=10
+def GloVe(texts: list, size :int, window :int, min_count :int, path :str):
+    with open("texts.txt", "w") as f: #HACER ESTO PARA LOS DEMAS MODELOS
+        for text in texts:            #EXTRAER LOS TEXTOS NO DE LOS ARCHIVOS ORIGINALES SINO DE ESTE
+            for word in text: 
+                f.write(word + ' ')
+            f.write("\n")
+        
+    corpus="texts.txt"
+    vocab_file="vocab.txt"
+    coocurrence_file="cooccurrence.bin"
+    coocurrence_shuf_file="cooccurrence.shuf.bin"
+    builddir="GloVeMaster/GloVeMaster/build"
+    save_file="GloVe_vectors"
+    verbose=2
+    memory=4.0
+    vocab_min_count= str(min_count)
+    vector_size= str(size)
+    max_iter=15
+    window_size= str(window)
+    binary=2
+    num_threads=8
+    x_max=10
 
-    output = subprocess.check_output("$BUILDDIR/vocab_count -min-count $VOCAB_MIN_COUNT -verbose $VERBOSE < $CORPUS > $VOCAB_FILE", shell=True)
-    output = subprocess.check_output("$BUILDDIR/cooccur -memory $MEMORY -vocab-file $VOCAB_FILE -verbose $VERBOSE -window-size $WINDOW_SIZE < $CORPUS > $COOCCURRENCE_FILE", shell=True)
-    output = subprocess.check_output("$BUILDDIR/shuffle -memory $MEMORY -verbose $VERBOSE < $COOCCURRENCE_FILE > $COOCCURRENCE_SHUF_FILE", shell=True)
-    output = subprocess.check_output("$BUILDDIR/glove -save-file $SAVE_FILE -threads $NUM_THREADS -input-file $COOCCURRENCE_SHUF_FILE -x-max $X_MAX -iter $MAX_ITER -vector-size $VECTOR_SIZE -binary $BINARY -vocab-file $VOCAB_FILE -verbose $VERBOSE", shell=True)
-
+    output = subprocess.check_output("echo", shell=True)
+    print(output.decode())
+    #                                $BUILDDIR/vocab_count -min-count $VOCAB_MIN_COUNT -verbose $VERBOSE < $CORPUS > $VOCAB_FILE
+    output = subprocess.check_output(builddir + "/vocab_count -min-count "+str(vocab_min_count)+ " -verbose "+str(verbose)+" < "+corpus+" > "+vocab_file, shell=True)
+    print(output.decode())
+    #                                $BUILDDIR/cooccur -memory $MEMORY -vocab-file $VOCAB_FILE -verbose $VERBOSE -window-size $WINDOW_SIZE < $CORPUS > $COOCCURRENCE_FILE
+    output = subprocess.check_output(builddir +"/cooccur -memory "+str(memory)+" -vocab-file "+vocab_file+" -verbose "+str(verbose)+" -window-size "+str(window_size)+" < "+corpus+" > "+coocurrence_file, shell=True)
+    print(output.decode())
+    #                               $BUILDDIR/shuffle -memory $MEMORY -verbose $VERBOSE < $COOCCURRENCE_FILE > $COOCCURRENCE_SHUF_FILE
+    output = subprocess.check_output(builddir +"/shuffle -memory "+str(memory)+" -verbose "+str(verbose)+" < "+coocurrence_file+" > "+coocurrence_shuf_file, shell=True)
+    print(output.decode())
+    #                                  $BUILDDIR/glove -save-file $SAVE_FILE -threads $NUM_THREADS -input-file $COOCCURRENCE_SHUF_FILE -x-max $X_MAX -iter $MAX_ITER -vector-size $VECTOR_SIZE -binary $BINARY -vocab-file $VOCAB_FILE -verbose $VERBOSE
+    output = subprocess.check_output(builddir +"/glove -save-file "+save_file+" -threads "+str(num_threads)+" -input-file " + coocurrence_shuf_file + " -x-max "+str(x_max)+"-iter "+str(max_iter)+" -vector-size "+str(vector_size)+" -binary "+str(binary)+" -vocab-file "+vocab_file+" -verbose "+str(verbose), shell=True)
     print(output.decode())
 
 
