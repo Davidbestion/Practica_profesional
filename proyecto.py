@@ -61,8 +61,6 @@ def Execute_Models(models :list[str], load_path :str, size :int, window :int, mi
     for func_name in models: 
         func = globals().get(func_name) #get the functions which names are in the "models" list
         if func and callable(func):
-            # if func_name== "GloVe":
-            #     results.append(func(texts,))
             results.append(func(tokens, size, window, min_count, save_path)) #store the results of the functions.
         else: raise ValueError("Error getting function in 'Execute_Models' function. Please check the list of models.")
     return results
@@ -88,15 +86,6 @@ def Word2Vec(token_list :list, size :int, window :int, min_count :int, path :str
 
     Save_Vectors(vectors, path, "Word2Vec_vectors.txt")
     return vectors
-
-    # if mode == 1: #Save the vectors in a file located at path
-    #     vectors.save(path)
-    #     return 
-    # if mode == -1: #Returns the vectors.
-    #     return vectors
-    # else: #Do both.
-    #     vectors.save(path)
-    #     return vectors
     
 def FastText(token_list :list, size :int, window :int, min_count :int, path :str):
     """Train a FastText model.
@@ -118,22 +107,8 @@ def FastText(token_list :list, size :int, window :int, min_count :int, path :str
     vectors = model.wv.vectors
 
     Save_Vectors(vectors, path, "FastText_vectors.txt")
-    # with open("FastText_vectors.txt", "w") as f:
-    #     for vector in vectors:
-    #         for number in vector:
-    #             f.write(str(number) + " ")
-    #         f.write("\n")
 
     return vectors
-
-    # if mode == 1: #Save the vectors in a file located at path
-    #     vectors.save(path)
-    #     return 
-    # if mode == -1: #Returns the vectors.
-    #     return vectors
-    # else: #Do both.
-    #     vectors.save(path)
-    #     return vectors
 
 #def BERT(token_list):#ATENCION NO SE SI ESTA BIEN.
     #model = BERTmaster
@@ -164,13 +139,13 @@ def GloVe(texts: list, size :int, window :int, min_count :int, path :str):
 
     output = subprocess.check_output("echo", shell=True)
     print(output.decode())
-    #                                $BUILDDIR/vocab_count -min-count $VOCAB_MIN_COUNT -verbose $VERBOSE < $CORPUS > $VOCAB_FILE
-    output = subprocess.check_output(builddir + "/vocab_count -min-count "+str(vocab_min_count)+ " -verbose "+str(verbose)+" < "+corpus+" > "+vocab_file, shell=True)
+    #                                  $BUILDDIR/vocab_count -min-count $VOCAB_MIN_COUNT -verbose $VERBOSE < $CORPUS > $VOCAB_FILE
+    output = subprocess.check_output(builddir +"/vocab_count -min-count "+str(vocab_min_count)+ " -verbose "+str(verbose)+" < "+corpus+" > "+vocab_file, shell=True)
     print(output.decode())
-    #                                $BUILDDIR/cooccur -memory $MEMORY -vocab-file $VOCAB_FILE -verbose $VERBOSE -window-size $WINDOW_SIZE < $CORPUS > $COOCCURRENCE_FILE
+    #                                  $BUILDDIR/cooccur -memory $MEMORY -vocab-file $VOCAB_FILE -verbose $VERBOSE -window-size $WINDOW_SIZE < $CORPUS > $COOCCURRENCE_FILE
     output = subprocess.check_output(builddir +"/cooccur -memory "+str(memory)+" -vocab-file "+vocab_file+" -verbose "+str(verbose)+" -window-size "+str(window_size)+" < "+corpus+" > "+coocurrence_file, shell=True)
     print(output.decode())
-    #                               $BUILDDIR/shuffle -memory $MEMORY -verbose $VERBOSE < $COOCCURRENCE_FILE > $COOCCURRENCE_SHUF_FILE
+    #                                  $BUILDDIR/shuffle -memory $MEMORY -verbose $VERBOSE < $COOCCURRENCE_FILE > $COOCCURRENCE_SHUF_FILE
     output = subprocess.check_output(builddir +"/shuffle -memory "+str(memory)+" -verbose "+str(verbose)+" < "+coocurrence_file+" > "+coocurrence_shuf_file, shell=True)
     print(output.decode())
     #                                  $BUILDDIR/glove -save-file $SAVE_FILE -threads $NUM_THREADS -input-file $COOCCURRENCE_SHUF_FILE -x-max $X_MAX -iter $MAX_ITER -vector-size $VECTOR_SIZE -binary $BINARY -vocab-file $VOCAB_FILE -verbose $VERBOSE
