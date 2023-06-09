@@ -7,5 +7,12 @@ vectors = proyecto.Execute_Models(["Word2Vec","FastText","GloVe"],"/media/david/
 
 print("Vectors\n")
 
-for v in vectors:
-   print(v)
+for model in vectors:
+   for element in model:
+      print(element + " ")
+      for v in element[1]:
+         print(v + " ")
+      print("\n")
+   print("\n")
+
+

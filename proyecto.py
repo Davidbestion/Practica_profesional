@@ -2,12 +2,6 @@ import os
 import numpy as np
 import subprocess
 
-#import BERTmaster.run_pretraining
-
-#from transformers import BertModel, BertTokenizer, BertForMaskedLM
-#import transformers
-#import BERTmaster.extract_features as Bert
-
 from spacy.lang.es import Spanish
 
 import gensim.models as models
@@ -64,7 +58,16 @@ def Execute_Models(models :list[str], load_path :str, size :int, window :int, mi
             results.append(func(tokens, size, window, min_count, save_path)) #store the results of the functions.
         else: raise ValueError("Error getting function in 'Execute_Models' function. Please check the list of models.")
     return results
-    
+
+
+
+
+
+
+
+
+
+
 def Word2Vec(token_list :list, size :int, window :int, min_count :int, path :str):
     """Train a Word2Vec model.
 
@@ -82,11 +85,32 @@ def Word2Vec(token_list :list, size :int, window :int, min_count :int, path :str
     If mode = 0, do both.
     """
     model = models.Word2Vec(sentences=token_list, vector_size=size, window=window, min_count=min_count)
-    vectors = model.wv.vectors
+    #vectors = model.wv.vectors
+
+    unique_words = set(word for text in token_list for word in text)
+    vectors = []
+
+    for word in unique_words:
+        elements = (word, model.wv[word])
+        vectors.append(elements)
+
 
     Save_Vectors(vectors, path, "Word2Vec_vectors.txt")
     return vectors
     
+
+
+
+
+
+
+
+
+
+
+
+
+
 def FastText(token_list :list, size :int, window :int, min_count :int, path :str):
     """Train a FastText model.
 
@@ -104,10 +128,16 @@ def FastText(token_list :list, size :int, window :int, min_count :int, path :str
     If mode = 0, do both.
     """
     model = models.FastText(sentences=token_list, vector_size=size, window=window, min_count=min_count)
-    vectors = model.wv.vectors
+    #vectors = model.wv.vectors
+
+    unique_words = set(word for text in token_list for word in text)
+    vectors = []
+
+    for word in unique_words:
+        elements = (word, model.wv[word])
+        vectors.append(elements)
 
     Save_Vectors(vectors, path, "FastText_vectors.txt")
-
     return vectors
 
 #def BERT(token_list):#ATENCION NO SE SI ESTA BIEN.
@@ -160,21 +190,23 @@ def GloVe(texts: list, size :int, window :int, min_count :int, path :str):
     #Los otros metodos devuelven un array con los vectores, 
     # que tambien son arrays con las respectivas componentes.
     for l in lines:
-        numbers = [str(x) for x in l.strip().split(' ')]
+        elements = l.split(' ')
         #ACLARACION: quito el primer elemento para que lo devuelto sean solo los vectores.
         #Este metodo de GloVe devuelve delante de las componentes, la palabra correspondiente a cada vector.
-        numbers = [float(x) for x in numbers[1:]]
-        vectors.append(numbers)
+        word = elements[0]
+        vector = np.array([float(x) for x in elements[1:]])
+        element = (word, vector)
+        vectors.append(element)
     
-    vectors = np.array(vectors)
     return vectors
 
 
 
-def Save_Vectors(vectors: list[list], path, file_name):
-    
-    with open(os.path.join(path,file_name), "w") as f:
-        for vector in vectors:
+
+def Save_Vectors(vectors: list[tuple[str, np.ndarray]], path: str, file_name: str) -> None:
+    with open(os.path.join(path, file_name), "w") as f:
+        for word, vector in vectors:
+            f.write(word + " ")
             for number in vector:
                 f.write(str(number) + " ")
             f.write("\n")
