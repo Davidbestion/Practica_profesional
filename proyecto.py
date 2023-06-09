@@ -6,7 +6,7 @@ from spacy.lang.es import Spanish
 
 import gensim.models as models
    
-def ReadTexts(path : str):
+def _read_texts(path : str):
     """Extracts the text of the .txt files in the given path.
     
     Parameters:
@@ -23,7 +23,7 @@ def ReadTexts(path : str):
                 doc_list.append(text)
     return doc_list
       
-def tokenize_text_list(text_list):
+def _tokenize_text_list(text_list):
     nlp = Spanish()
     tokenizer = nlp.tokenizer
     token_list = []
@@ -32,25 +32,24 @@ def tokenize_text_list(text_list):
         token_list.append([token.text for token in tokens]) #token_list.append(tokens)
     return token_list
 
-def Execute_Models(models :list[str], load_path :str, size :int, window :int, min_count :int, save_path :str):
+def _Execute_Models(models :list[str], load_path :str, size :int, window :int, min_count :int, save_path :str):
     """Trains all the modles requested in "models".
 
     Parameters:
-    models: list of models' names.
-    load_path: path to the files containing the texts.
-    size: length of the vectors resulting from training the model.
-    window: maximum distance between the current and predicted word within a sentence.
-    min_count: if a word appears less than this number of times then it will be ignored.
-    save_path: path to a file to save the vectors.
-    mode: number = {-1, 0, 1}. Defines the return mode.
+    models list[str]: list of models' names.
+    load_path str: path to the files containing the texts.
+    size int: length of the vectors resulting from training the model.
+    window int: maximum distance between the current and predicted word within a sentence.
+    min_count int: if a word appears less than this number of times then it will be ignored.
+    save_path str: path to a file to save the vectors.
 
     Return:
-    results: list containing lists with the vectors retorned by the different models.
+    list[list[tuple(str, nd.array)]] list containing lists with the words and their respective vectors returned by the different models.
     """
     
     results = []
-    texts = ReadTexts(load_path)
-    tokens = tokenize_text_list(texts)
+    texts = _read_texts(load_path)
+    tokens = _tokenize_text_list(texts)
     
     for func_name in models: 
         func = globals().get(func_name) #get the functions which names are in the "models" list
@@ -59,33 +58,20 @@ def Execute_Models(models :list[str], load_path :str, size :int, window :int, mi
         else: raise ValueError("Error getting function in 'Execute_Models' function. Please check the list of models.")
     return results
 
-
-
-
-
-
-
-
-
-
-def Word2Vec(token_list :list, size :int, window :int, min_count :int, path :str):
+def word2vec(token_list :list, size :int, window :int, min_count :int, path :str):
     """Train a Word2Vec model.
 
     Parameters:
-    token_list: list of lists of the tokenized texts. Each element of the bigger list is a list, and every inner list is a list of tokens, a tokenized text.
-    size: length of the vectors resulting from training the model.
-    window: maximum distance between the current and predicted word within a sentence.
-    min_count: if a word appears less than this number of times then it will be ignored.
-    path: path to a file to save the vectors.
-    mode: number = {-1, 0, 1}. Defines the return mode.
-   
+    token_list list[str]: list of lists of the tokenized texts. Each element of the bigger list is a list, and every inner list is a list of tokens, a tokenized text.
+    size int: length of the vectors resulting from training the model.
+    window int: maximum distance between the current and predicted word within a sentence.
+    min_count int: if a word appears less than this number of times then it will be ignored.
+    path str: path to a file to save the vectors.
+
     Returns:
-    If mode = -1, the function returns the vectors.
-    If mode = 1, the function does not return the vectors but save them in a file at the giving path.
-    If mode = 0, do both.
+    list[tuple(str, nd.array)]: list of words with their respective vectors.
     """
     model = models.Word2Vec(sentences=token_list, vector_size=size, window=window, min_count=min_count)
-    #vectors = model.wv.vectors
 
     unique_words = set(word for text in token_list for word in text)
     vectors = []
@@ -94,41 +80,24 @@ def Word2Vec(token_list :list, size :int, window :int, min_count :int, path :str
         elements = (word, model.wv[word])
         vectors.append(elements)
 
-
-    Save_Vectors(vectors, path, "Word2Vec_vectors.txt")
+    _save_vectors(vectors, path, "Word2Vec_vectors.txt")
     return vectors
-    
 
 
-
-
-
-
-
-
-
-
-
-
-
-def FastText(token_list :list, size :int, window :int, min_count :int, path :str):
+def fasttext(token_list :list, size :int, window :int, min_count :int, path :str):
     """Train a FastText model.
 
     Parameters:
-    token_list: list of lists of the tokenized texts. Each element of the bigger list is a list, and every inner list is a list of tokens, a tokenized text.
-    size: length of the vectors resulting from training the model.
-    window: maximum distance between the current and predicted word within a sentence.
-    min_count: if a word appears less than this number of times then it will be ignored.
-    path: path to a file to save the vectors.
-    mode: number = {-1, 0, 1}. Defines the return mode.
-   
+    token_list list[str]: list of lists of the tokenized texts. Each element of the bigger list is a list, and every inner list is a list of tokens, a tokenized text.
+    size int: length of the vectors resulting from training the model.
+    window int: maximum distance between the current and predicted word within a sentence.
+    min_count int: if a word appears less than this number of times then it will be ignored.
+    path str: path to a file to save the vectors.
+
     Returns:
-    If mode = -1, the function returns the vectors.
-    If mode = 1, the function does not return the vectors but save them in a file at the giving path.
-    If mode = 0, do both.
+    list[tuple(str, nd.array)]: list of words with their respective vectors.
     """
     model = models.FastText(sentences=token_list, vector_size=size, window=window, min_count=min_count)
-    #vectors = model.wv.vectors
 
     unique_words = set(word for text in token_list for word in text)
     vectors = []
@@ -137,16 +106,24 @@ def FastText(token_list :list, size :int, window :int, min_count :int, path :str
         elements = (word, model.wv[word])
         vectors.append(elements)
 
-    Save_Vectors(vectors, path, "FastText_vectors.txt")
+    _save_vectors(vectors, path, "FastText_vectors.txt")
     return vectors
 
-#def BERT(token_list):#ATENCION NO SE SI ESTA BIEN.
-    #model = BERTmaster
-    #model = transformers.
+def glove(texts: list, size :int, window :int, min_count :int, path :str):
+    """Train a GloVe model.
 
-def GloVe(texts: list, size :int, window :int, min_count :int, path :str):
-    with open("texts.txt", "w") as f: #HACER ESTO PARA LOS DEMAS MODELOS
-        for text in texts:            #EXTRAER LOS TEXTOS NO DE LOS ARCHIVOS ORIGINALES SINO DE ESTE
+    Parameters:
+    token_list list[str]: list of lists of the tokenized texts. Each element of the bigger list is a list, and every inner list is a list of tokens, a tokenized text.
+    size int: length of the vectors resulting from training the model.
+    window int: maximum distance between the current and predicted word within a sentence.
+    min_count int: if a word appears less than this number of times then it will be ignored.
+    path str: path to a file to save the vectors.
+
+    Returns:
+    list[tuple(str, nd.array)]: list of words with their respective vectors.
+    """
+    with open("texts.txt", "w") as f: 
+        for text in texts:            
             for word in text: 
                 f.write(word + ' ')
             f.write("\n")
@@ -200,10 +177,7 @@ def GloVe(texts: list, size :int, window :int, min_count :int, path :str):
     
     return vectors
 
-
-
-
-def Save_Vectors(vectors: list[tuple[str, np.ndarray]], path: str, file_name: str) -> None:
+def _save_vectors(vectors: list[tuple[str, np.ndarray]], path: str, file_name: str) -> None:
     with open(os.path.join(path, file_name), "w") as f:
         for word, vector in vectors:
             f.write(word + " ")
