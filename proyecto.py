@@ -1,6 +1,12 @@
 import os
 import numpy as np
 import subprocess
+import tensorflow as tf
+import matplotlib.pyplot as plt
+#import tensorflow_probability as tfp
+import tensorboard as tb
+
+
 
 from spacy.lang.es import Spanish
 
@@ -32,7 +38,7 @@ def _tokenize_text_list(text_list):
         token_list.append([token.text for token in tokens]) #token_list.append(tokens)
     return token_list
 
-def _Execute_Models(models :list[str], load_path :str, size :int, window :int, min_count :int, save_path :str):
+def execute_Models(models :list[str], load_path :str, size :int, window :int, min_count :int, save_path :str):
     """Trains all the modles requested in "models".
 
     Parameters:
@@ -184,5 +190,70 @@ def _save_vectors(vectors: list[tuple[str, np.ndarray]], path: str, file_name: s
             for number in vector:
                 f.write(str(number) + " ")
             f.write("\n")
+
+def transform_to_3d(components):
+    # Create a tensor from the input components
+    input_tensor = tf.constant(components, dtype=tf.float32)
+    
+    # Reshape the input tensor to have shape (1, d), where d is the number of components
+    input_tensor = tf.reshape(input_tensor, (1, -1))
+    
+    # Create a random 3x3 matrix as the transformation matrix
+    transformation_matrix = tf.random.normal((input_tensor.shape[1], 3), dtype=tf.float32)
+    
+    # Multiply the input tensor by the transformation matrix to get the transformed vector
+    transformed_vector = tf.matmul(input_tensor, transformation_matrix)
+    
+    # Reshape the transformed vector to have shape (3,)
+    transformed_vector = tf.reshape(transformed_vector, (3,))
+    
+    return transformed_vector
+
+# def plot_3d_vectors(vectors: list[tuple[str, np.ndarray]]) -> None:
+#     # Create a list of the transformed vectors
+#     transformed_vectors = [transform_to_3d(vector) for pair in vectors for _,vector in pair]
+    
+#     # Create a list of the words
+#     words = [word for pair in vectors for word,_ in pair]
+    
+#     # Create a figure and a 3D scatter plot
+#     fig = plt.figure()
+#     ax = fig.add_subplot(111, projection='3d')
+#     ax.scatter([vector[0] for vector in transformed_vectors], 
+#                [vector[1] for vector in transformed_vectors], 
+#                [vector[2] for vector in transformed_vectors])
+    
+#     # Add the words to the plot
+#     for word, vector in zip(words, transformed_vectors):
+#         ax.text(vector[0], vector[1], vector[2], word)
+    
+#     # Save the plot
+#     #plt.savefig(os.path.join(path, file_name))
+#     plt.show()
+#     plt.close()
+
+
+def plot_3d_vectors(vectors):
+    # Create a list of the transformed vectors
+    transformed_vectors = [transform_to_3d(vector) for pair in vectors for _,vector in pair]
+     # Create a list of the words
+    words = [word for pair in vectors for word,_ in pair]
+     # Create a TensorFlow summary writer
+    writer = tf.summary.create_file_writer('log')
+     # Write the vectors to the summary writer
+    with writer.as_default():
+        for word, vector in zip(words, transformed_vectors):
+            tf.summary.scalar(word, vector[0], step=0)
+            tf.summary.scalar(word, vector[1], step=0)
+            tf.summary.scalar(word, vector[2], step=0)
+    
+
+        # tf.summary.scalar('words', tf.constant(words), step=0)
+        # tf.summary.text('words', tf.constant(words), step=0)
+        # tf.summary.histogram('vectors', np.array(transformed_vectors), step=0)
+
+
+
+
 
 
