@@ -16,10 +16,10 @@ def _read_texts(path : str):
     """Extracts the text of the .txt files in the given path.
     
     Parameters:
-    path - path to the files
+    path:str - path to the files
 
     Returns:
-    doc_list - list of the texts stored in the files of the given path. Each element of the list is the text of a different file.
+    doc_list:list[str] - list of the texts stored in the files of the given path. Each element of the list is the text of a different file.
     """
     doc_list = []
     for filename in os.listdir(path):
